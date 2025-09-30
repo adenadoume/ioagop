@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Upload Attachment{% endblock %}
+{% block content %}
+<h3>Upload attachment</h3>
+<form method="post" enctype="multipart/form-data" 
+      hx-post="." hx-target="#chips-{{ object._meta.model_name }}-{{ object.pk }}" hx-swap="outerHTML">
+  {% csrf_token %}
+
+  <div x-data="dropzone()" class="drop" 
+       @dragover.prevent="hover=true" 
+       @dragleave.prevent="hover=false" 
+       @drop.prevent="drop($event)"
+       :style="hover ? 'border-color:#6366f1;background:#f5f5ff' : ''">
+    <p><strong>Drag & drop files here</strong> or</p>
+    <label class="btn secondary">
+      Choose file
+      <input type="file" name="file" class="hidden" @change="autoSubmit($event)">
+    </label>
+  </div>
+  <noscript>
+    {{ form.as_p }}
+    <button class="btn" type="submit">Upload</button>
+  </noscript>
+</form>
+
+<script>
+function dropzone(){
+  return {
+    hover:false,
+    autoSubmit(e){
+      // The form uses HTMX; just submit normally (HTMX intercepts)
+      e.target.form.requestSubmit();
+    },
+    drop(e){
+      const dt=e.dataTransfer; if(!dt.files?.length) return;
+      const inp = e.target.closest('form').querySelector('input[type=file]');
+      const dt2 = new DataTransfer();
+      dt2.items.add(dt.files[0]);
+      inp.files = dt2.files;
+      this.autoSubmit({target:inp});
+    }
+  }
+}
+</script>
+{% endblock %}

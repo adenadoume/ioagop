@@ -1,0 +1,19 @@
+{% comment %}Reusable chips with lightbox triggers and delete actions{% endcomment %}
+<div class="chips" id="chips-{{ object._meta.model_name }}-{{ object.pk }}">
+  {% for a in object.attachments.all %}
+    <span class="chip" id="att-{{ a.id }}">
+      <a href="#" @click.prevent="$root.show('{{ a.file.url }}','{{ a.content_type }}')">
+        {{ a.name }}
+      </a>
+      <small>({{ a.size|filesizeformat }})</small>
+      <button title="Remove" 
+              hx-delete="{% url 'inventory:attachment_delete' a.id %}"
+              hx-target="#att-{{ a.id }}" 
+              hx-swap="outerHTML">
+        ✕
+      </button>
+    </span>
+  {% empty %}
+    <em>No files yet.</em>
+  {% endfor %}
+</div>
