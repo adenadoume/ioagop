@@ -1,0 +1,23 @@
+
+- name: Install nginx
+  apt: { name: nginx, state: present }
+
+- name: Site conf
+  template:
+    src: site.conf.j2
+    dest: /etc/nginx/sites-available/{{ project_name }}.conf
+
+- name: Enable site
+  file:
+    src: /etc/nginx/sites-available/{{ project_name }}.conf
+    dest: /etc/nginx/sites-enabled/{{ project_name }}.conf
+    state: link
+    force: true
+
+- name: Remove default
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Reload
+  shell: nginx -t && systemctl reload nginx

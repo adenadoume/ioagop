@@ -1,0 +1,25 @@
+
+- name: Install PostgreSQL
+  apt:
+    name: [postgresql, postgresql-contrib, libpq-dev]
+    state: present
+
+- name: Ensure service running
+  service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Ensure user
+  become_user: postgres
+  postgresql_user:
+    name: "{{ postgres_user }}"
+    password: "{{ postgres_password }}"
+    role_attr_flags: CREATEDB
+
+- name: Ensure db
+  become_user: postgres
+  postgresql_db:
+    name: "{{ postgres_db }}"
+    owner: "{{ postgres_user }}"
+    encoding: UTF8

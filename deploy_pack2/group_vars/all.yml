@@ -1,0 +1,28 @@
+
+project_name: airtable_clone
+domain_name: example.com
+letsencrypt_email: you@example.com
+
+app_dir: /srv/{{ project_name }}
+venv_dir: /srv/{{ project_name }}/venv
+repo_url: git@github.com:YOUR_GH_USER/YOUR_REPO.git
+
+python_version: "3.12"
+gunicorn_workers: 3
+gunicorn_bind: unix:/run/{{ project_name }}.sock
+gunicorn_timeout: 120
+
+postgres_version: "15"
+postgres_db: "{{ project_name }}"
+postgres_user: "{{ project_name }}"
+postgres_password: "CHANGE_ME_SECURELY"
+
+redis_port: 6379
+
+django_settings_module: "config.settings.production"
+allowed_hosts:
+  - "{{ domain_name }}"
+  - "localhost"
+  - "127.0.0.1"
+
+enable_https: true

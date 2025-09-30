@@ -1,0 +1,5 @@
+pandas
+openpyxl
+Pillow
+django-htmx
+psycopg2-binary

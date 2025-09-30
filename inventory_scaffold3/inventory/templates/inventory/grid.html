@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<!doctype html><html><head><meta charset="utf-8"><title>Grid</title>
+<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<style>body{font-family:ui-sans-serif,system-ui; margin:20px}table{width:100%; border-collapse:collapse}th,td{border:1px solid #ddd; padding:8px}th{background:#f8f8f8; position:sticky; top:0}tr.dragging{opacity:0.6}.right{text-align:right}.chip{display:inline-block; padding:2px 6px; background:#eef; border-radius:6px; margin-right:4px}</style>
+</head><body x-data>
+<h2>{% if mode == "container" %}Container: {{ container.code }}{% else %}Products{% endif %}</h2>
+{% if mode == "container" %}
+<div id="totals"><strong>Totals:</strong> KG: {{ totals.total_kg|default:0 }} | CBM: {{ totals.total_cbm|default:0 }} | Cost: {{ totals.total_cost|default:0 }}</div>
+<table id="items"><thead><tr><th>Drag</th><th>Product</th><th>Supplier</th><th>Qty</th><th class="right">KG</th><th class="right">CBM</th><th class="right">Unit Cost</th><th class="right">Total Cost</th></tr></thead>
+<tbody id="tbody">
+{% for it in items %}
+<tr data-id="{{ it.id }}"><td class="drag">☰</td><td>{{ it.product.name }}</td><td>{{ it.product.supplier.name }}</td>
+<td contenteditable="true" onblur="saveInline('item', {{ it.id }}, 'quantity', this.innerText)">{{ it.quantity }}</td>
+<td class="right">{{ it.product.weight_kg|default:"-" }}</td>
+<td class="right">{{ it.product.cbm|default:"-" }}</td>
+<td class="right" contenteditable="true" onblur="saveInline('product', {{ it.product.id }}, 'unit_cost', this.innerText)">{{ it.product.unit_cost|default:"-" }}</td>
+<td class="right">{{ it.total_cost|default:0 }}</td></tr>
+{% empty %}<tr><td colspan="8">No items yet.</td></tr>{% endfor %}
+</tbody></table>
+<script>
+function saveInline(model, id, field, value){
+  fetch("{% url 'inventory:inline_update' 'MODEL' 0 'FIELD' %}".replace("MODEL", model).replace("/0/", "/"+id+"/").replace("FIELD", field), {
+    method:"POST", headers: {'X-CSRFToken': '{{ csrf_token }}', 'HX-Request': 'true'}, body: new URLSearchParams({value:value})
+  }).then(()=>location.reload());
+}
+new Sortable(document.getElementById('tbody'), {handle: '.drag', animation: 150, onEnd: function(){
+  const order = Array.from(document.querySelectorAll('#tbody tr')).map(tr=>tr.dataset.id);
+  fetch("{% url 'inventory:reorder_items' container.id %}", {method:"POST", headers: {'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'}, body: JSON.stringify({order})});
+}});
+</script>
+{% else %}
+<div id="totals"><strong>Totals:</strong> KG: {{ totals.total_kg|default:0 }} | CBM: {{ totals.total_cbm|default:0 }} | Average Unit Cost: {{ totals.total_cost|default:0 }}</div>
+<table><thead><tr><th>Product</th><th>Supplier</th><th>Project</th><th>Building</th><th class="right">KG</th><th class="right">CBM</th><th class="right">Cost</th></tr></thead>
+<tbody>
+{% for p in products %}
+<tr><td>{{ p.name }}</td><td>{{ p.supplier.name }}</td><td>{{ p.project|default:"-" }}</td><td>{{ p.building|default:"-" }}</td>
+<td class="right" contenteditable="true" onblur="saveInline('product', {{ p.id }}, 'weight_kg', this.innerText)">{{ p.weight_kg|default:"-" }}</td>
+<td class="right" contenteditable="true" onblur="saveInline('product', {{ p.id }}, 'cbm', this.innerText)">{{ p.cbm|default:"-" }}</td>
+<td class="right" contenteditable="true" onblur="saveInline('product', {{ p.id }}, 'unit_cost', this.innerText)">{{ p.unit_cost|default:"-" }}</td></tr>
+{% empty %}<tr><td colspan="7">No products.</td></tr>{% endfor %}
+</tbody></table>
+<script>
+function saveInline(model, id, field, value){
+  fetch("{% url 'inventory:inline_update' 'MODEL' 0 'FIELD' %}".replace("MODEL", model).replace("/0/", "/"+id+"/").replace("FIELD", field), {
+    method:"POST", headers: {'X-CSRFToken': '{{ csrf_token }}', 'HX-Request': 'true'}, body: new URLSearchParams({value:value})
+  });
+}
+</script>
+{% endif %}
+<hr/><div><a href="{% url 'inventory:xlsx_import' %}">Import from Excel (XLSX)</a></div>
+</body></html>
+
+{% endblock %}

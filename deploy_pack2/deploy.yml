@@ -1,0 +1,13 @@
+
+- hosts: vps
+  become: true
+  vars_files:
+    - group_vars/all.yml
+
+  roles:
+    - role: common
+    - role: postgres
+    - role: redis
+    - role: app
+    - role: nginx
+    - role: certbot

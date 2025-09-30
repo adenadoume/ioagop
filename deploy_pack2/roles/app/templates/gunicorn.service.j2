@@ -1,0 +1,15 @@
+
+[Unit]
+Description=Gunicorn for {{ project_name }}
+After=network.target
+
+[Service]
+User={{ ansible_user }}
+Group={{ ansible_user }}
+WorkingDirectory={{ app_dir }}/current
+EnvironmentFile={{ app_dir }}/shared/.env
+ExecStart={{ venv_dir }}/bin/gunicorn config.wsgi:application --workers {{ gunicorn_workers }} --bind {{ gunicorn_bind }} --timeout {{ gunicorn_timeout }}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+
+server {
+    listen 80;
+    server_name {{ domain_name }};
+    {% if enable_https %}return 301 https://$host$request_uri;{% else %}
+    location /static/ { alias {{ app_dir }}/shared/static/; }
+    location /media/ { alias {{ app_dir }}/shared/media/; }
+    location / {
+        proxy_pass http://unix:{{ gunicorn_bind }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }{% endif %}
+}

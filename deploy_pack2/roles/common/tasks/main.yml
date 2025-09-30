@@ -1,0 +1,26 @@
+
+- name: Install base packages
+  apt:
+    name:
+      - build-essential
+      - git
+      - curl
+      - python3-pip
+      - python3-venv
+      - python3-dev
+      - pkg-config
+      - libpq-dev
+    state: present
+
+- name: Ensure UFW allows SSH/HTTP/HTTPS
+  ufw:
+    rule: allow
+    name: "{{ item }}"
+  loop:
+    - OpenSSH
+    - "Nginx Full"
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: deny
